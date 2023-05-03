@@ -18,3 +18,49 @@
 01-01-2001 4:59pm - Application now has a fully-functional express server, with a GET route for the location resource. -->
 
 ## Credit and Collaborations
+
+<hr>
+
+### Feature Times Estimates
+
+
+**Name of feature: React setup**
+
+Estimate of time needed to complete: 60min
+
+Start time: 12pm
+
+Finish time: 1245pm
+
+Actual time needed to complete: 45min
+
+**Name of feature: Locations**
+
+Estimate of time needed to complete: 120min
+
+Start time: 1pm
+
+Finish time: 2pm
+
+Actual time needed to complete: 60min
+
+**Name of feature: Map**
+
+Estimate of time needed to complete: 60min
+
+Start time: 10pm
+
+Finish time: 12pm
+
+Actual time needed to complete: 120min
+
+**Name of feature: Errors**
+
+Estimate of time needed to complete: 120min
+
+Start time: 2pm
+
+Finish time: 230pm
+
+Actual time needed to complete: 30min
+

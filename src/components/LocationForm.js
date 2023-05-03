@@ -1,6 +1,7 @@
 // react imports
 import React from "react";
 import { useState } from "react";
+
 //axios imports
 import axios from "axios";
 
@@ -13,14 +14,15 @@ import Col from "react-bootstrap/Col";
 import Card from "react-bootstrap/esm/Card";
 
 export default function LocationForm() {
+  // state variables
   const [location, setlocation] = useState("");
   const [apiData, setApiData] = useState(null);
-  const [apiCalled, setApiCalled] = useState(false);
-
+  const [requestError, setRequestError] = useState(null);
+  // controlled input change handler
   const handleChange = (e) => {
     setlocation(e.target.value);
   };
-
+  // function to get location data from location IQ
   const getLocationData = async (e) => {
     e.preventDefault();
     try {
@@ -39,12 +41,15 @@ export default function LocationForm() {
         longitude: response.data[0].lon,
         mapImg: `https://maps.locationiq.com/v3/staticmap?key=${process.env.REACT_APP_LOCATION_API_KEY}&center=${response.data[0].lat},${response.data[0].lon}`,
       });
-      setApiCalled(true);
+      setRequestError(null);
     } catch (error) {
-      console.error(error);
+      console.log(error);
+      setRequestError(error);
     }
   };
+
   return (
+    // display search box and button
     <Row className='w-100'>
       <Form
         onSubmit={getLocationData}
@@ -66,9 +71,18 @@ export default function LocationForm() {
         </Row>
       </Form>
 
-      {/* conditionally render location data */}
-      {apiCalled && apiData && (
-        <Row className='d-flex justify-content-center mt-3'>
+      {/* display error message if api resulted in error */}
+      {requestError ? (
+        <h1 className='text-center mt-5 text-danger'>
+          {requestError.message}{" "}
+        </h1>
+      ) : (
+        ""
+      )}
+
+      {/* display card if there is data to display */}
+      {apiData ? (
+        <Row className='d-flex justify-content-center mt-5'>
           <Card className='w-50'>
             <Card.Title className='text-center'>
               {apiData.displayName}
@@ -86,6 +100,8 @@ export default function LocationForm() {
             </Card.Body>
           </Card>
         </Row>
+      ) : (
+        ""
       )}
     </Row>
   );
