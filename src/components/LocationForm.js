@@ -1,6 +1,7 @@
 // react imports
 import React from "react";
 import { useState } from "react";
+import Weather from "./Weather";
 
 //axios imports
 import axios from "axios";
@@ -35,19 +36,38 @@ export default function LocationForm() {
           },
         }
       );
+      let displayName = response.data[0].display_name;
+      let latitude = response.data[0].lat;
+      let longitude = response.data[0].lon;
+      let mapImg = `https://maps.locationiq.com/v3/staticmap?key=${process.env.REACT_APP_LOCATION_API_KEY}&center=${response.data[0].lat},${response.data[0].lon}`;
+      let weatherResponse = await getWeatherData(location, longitude, latitude);
+      let forecasts = weatherResponse ? weatherResponse.data : undefined;
       setApiData({
-        displayName: response.data[0].display_name,
-        latitude: response.data[0].lat,
-        longitude: response.data[0].lon,
-        mapImg: `https://maps.locationiq.com/v3/staticmap?key=${process.env.REACT_APP_LOCATION_API_KEY}&center=${response.data[0].lat},${response.data[0].lon}`,
+        displayName,
+        latitude,
+        longitude,
+        mapImg,
+        forecasts,
       });
       setRequestError(null);
     } catch (error) {
-      console.log(error);
       setRequestError(error);
     }
   };
-
+  const getWeatherData = async (searchQuery, lon, lat) => {
+    try {
+      const response = await axios.get(`http://localhost:8000/weather`, {
+        params: {
+          searchQuery,
+          lon,
+          lat,
+        },
+      });
+      return response;
+    } catch (error) {
+      setRequestError(error);
+    }
+  };
   return (
     // display search box and button
     <Row className='w-100'>
@@ -62,7 +82,16 @@ export default function LocationForm() {
               type='text'
               placeholder='Enter Location'
             />
+            {/* display error message if api resulted in error */}
+            <Form.Text muted>
+              {requestError ? (
+                <p className='text-danger'>{requestError.message} </p>
+              ) : (
+                ""
+              )}
+            </Form.Text>
           </Col>
+
           <Col lg={2}>
             <Button variant='primary' type='submit'>
               Explore!
@@ -71,34 +100,34 @@ export default function LocationForm() {
         </Row>
       </Form>
 
-      {/* display error message if api resulted in error */}
-      {requestError ? (
-        <h1 className='text-center mt-5 text-danger'>
-          {requestError.message}{" "}
-        </h1>
-      ) : (
-        ""
-      )}
-
       {/* display card if there is data to display */}
       {apiData ? (
         <Row className='d-flex justify-content-center mt-5'>
-          <Card className='w-50'>
-            <Card.Title className='text-center'>
-              {apiData.displayName}
-            </Card.Title>
-            <img src={apiData.mapImg} alt='map' className='' />
-            <Card.Body>
-              <ul className='list-group list-group-flush mt-3'>
-                <li className='list-group-item'>
-                  Latitude: {apiData.latitude}
-                </li>
-                <li className='list-group-item'>
-                  Longitude: {apiData.longitude}
-                </li>
-              </ul>
-            </Card.Body>
-          </Card>
+          <Col>
+            <Card >
+              <Card.Title className='text-center'>
+                {apiData.displayName}
+              </Card.Title>
+              <img src={apiData.mapImg} alt='map' />
+              <Card.Body>
+                <ul className='list-group list-group-flush mt-3'>
+                  <li className='list-group-item'>
+                    Latitude: {apiData.latitude}
+                  </li>
+                  <li className='list-group-item'>
+                    Longitude: {apiData.longitude}
+                  </li>
+                </ul>
+              </Card.Body>
+            </Card>
+          </Col>
+          {apiData.forecasts ? (
+            <Col>
+              <Weather forecasts={apiData.forecasts} />
+            </Col>
+          ) : (
+            ""
+          )}
         </Row>
       ) : (
         ""
