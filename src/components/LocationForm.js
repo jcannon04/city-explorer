@@ -2,7 +2,7 @@
 import React from "react";
 import { useState } from "react";
 import Weather from "./Weather";
-
+import Movies from "./Movies";
 //axios imports
 import axios from "axios";
 
@@ -41,13 +41,18 @@ export default function LocationForm() {
       let longitude = response.data[0].lon;
       let mapImg = `https://maps.locationiq.com/v3/staticmap?key=${process.env.REACT_APP_LOCATION_API_KEY}&center=${response.data[0].lat},${response.data[0].lon}`;
       let weatherResponse = await getWeatherData(location, longitude, latitude);
+      let movieResponse = await getMovieData(location);
       let forecasts = weatherResponse ? weatherResponse.data : undefined;
+      let movies = movieResponse ? movieResponse.data: undefined;
+
+      console.log('movies', movieResponse)
       setApiData({
         displayName,
         latitude,
         longitude,
         mapImg,
         forecasts,
+        movies
       });
       setRequestError(null);
     } catch (error) {
@@ -56,7 +61,7 @@ export default function LocationForm() {
   };
   const getWeatherData = async (searchQuery, lon, lat) => {
     try {
-      const response = await axios.get(`http://localhost:8000/weather`, {
+      const response = await axios.get(`https://city-explorer-api-drec.onrender.com/weather`, {
         params: {
           searchQuery,
           lon,
@@ -68,15 +73,27 @@ export default function LocationForm() {
       setRequestError(error);
     }
   };
+  const getMovieData = async (searchQuery) => {
+    try {
+      const response = await axios.get(`https://city-explorer-api-drec.onrender.com/movies`, {
+        params: {
+          city_name: searchQuery,
+        },
+      });
+      return response;
+    } catch (error) {
+      setRequestError(error);
+    }
+  };
   return (
     // display search box and button
-    <Row className='w-100'>
+    <Row className='w-100 justify-content-center'>
       <Form
         onSubmit={getLocationData}
         className='d-flex justify-content-center'
       >
-        <Row className='w-50'>
-          <Col>
+        <Row className='w-100'>
+          <Col className=''>
             <Form.Control
               onChange={handleChange}
               type='text'
@@ -92,7 +109,7 @@ export default function LocationForm() {
             </Form.Text>
           </Col>
 
-          <Col lg={2}>
+          <Col xs={4}>
             <Button variant='primary' type='submit'>
               Explore!
             </Button>
@@ -102,9 +119,9 @@ export default function LocationForm() {
 
       {/* display card if there is data to display */}
       {apiData ? (
-        <Row className='d-flex justify-content-center mt-5'>
-          <Col>
-            <Card >
+        <Row className='mt-5 text-center'>
+          <Col >
+            <Card>
               <Card.Title className='text-center'>
                 {apiData.displayName}
               </Card.Title>
@@ -122,9 +139,16 @@ export default function LocationForm() {
             </Card>
           </Col>
           {apiData.forecasts ? (
-            <Col>
+            <Row>
               <Weather forecasts={apiData.forecasts} />
-            </Col>
+            </Row>
+          ) : (
+            ""
+          )}
+          {apiData.movies ? (
+            <Row>
+              <Movies movies={apiData.movies} />
+            </Row>
           ) : (
             ""
           )}
