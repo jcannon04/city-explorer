@@ -3,7 +3,9 @@ import React from "react";
 import { useState } from "react";
 import Weather from "./Weather";
 import Movies from "./Movies";
-//axios imports
+import LocationData from "./LocationData";
+
+// axios import
 import axios from "axios";
 
 // react-bootstrap imports
@@ -12,18 +14,44 @@ import Form from "react-bootstrap/Form";
 import Button from "react-bootstrap/Button";
 import Row from "react-bootstrap/Row";
 import Col from "react-bootstrap/Col";
-import Card from "react-bootstrap/esm/Card";
 
 export default function LocationForm() {
   // state variables
   const [location, setlocation] = useState("");
   const [apiData, setApiData] = useState(null);
   const [requestError, setRequestError] = useState(null);
-  // controlled input change handler
+
+  // function to handle change in search box
   const handleChange = (e) => {
     setlocation(e.target.value);
   };
-  // function to get location data from location IQ
+
+  //  function to get data from apis
+  const getPageData = async (e) => {
+    e.preventDefault();
+    try {
+      let response = await getLocationData();
+      let weatherResponse = await getWeatherData(location, response.data[0].lon, response.data[0].lat);
+      let movieResponse = await getMovieData(location);
+  
+      const responseData = {
+        displayName: response.data[0].display_name,
+        latitude: response.data[0].lat,
+        longitude: response.data[0].lon,
+        mapImg: `https://maps.locationiq.com/v3/staticmap?key=${process.env.REACT_APP_LOCATION_API_KEY}&center=${response.data[0].lat},${response.data[0].lon}`,
+        forecasts: weatherResponse ? weatherResponse.data : undefined,
+        movies: movieResponse ? movieResponse.data : undefined,
+      };
+  
+      setApiData(responseData);
+      setRequestError(null);
+      
+    } catch (error) {
+      setRequestError(error);
+    }
+  };
+
+  // function to get location data from api
   const getLocationData = async (e) => {
     e.preventDefault();
     try {
@@ -36,60 +64,53 @@ export default function LocationForm() {
           },
         }
       );
-      let displayName = response.data[0].display_name;
-      let latitude = response.data[0].lat;
-      let longitude = response.data[0].lon;
-      let mapImg = `https://maps.locationiq.com/v3/staticmap?key=${process.env.REACT_APP_LOCATION_API_KEY}&center=${response.data[0].lat},${response.data[0].lon}`;
-      let weatherResponse = await getWeatherData(location, longitude, latitude);
-      let movieResponse = await getMovieData(location);
-      let forecasts = weatherResponse ? weatherResponse.data : undefined;
-      let movies = movieResponse ? movieResponse.data: undefined;
-
-      console.log('movies', movieResponse)
-      setApiData({
-        displayName,
-        latitude,
-        longitude,
-        mapImg,
-        forecasts,
-        movies
-      });
-      setRequestError(null);
-    } catch (error) {
-      setRequestError(error);
-    }
-  };
-  const getWeatherData = async (searchQuery, lon, lat) => {
-    try {
-      const response = await axios.get(`https://city-explorer-api-drec.onrender.com/weather`, {
-        params: {
-          searchQuery,
-          lon,
-          lat,
-        },
-      });
       return response;
     } catch (error) {
       setRequestError(error);
     }
   };
+
+  // function to get weather data from api
+  const getWeatherData = async (searchQuery, lon, lat) => {
+    try {
+      const response = await axios.get(
+        `https://city-explorer-api-drec.onrender.com/weather`,
+        {
+          params: {
+            searchQuery,
+            lon,
+            lat,
+          },
+        }
+      );
+      return response;
+    } catch (error) {
+      setRequestError(error);
+    }
+  };
+
+  // function to get movie data from api
   const getMovieData = async (searchQuery) => {
     try {
-      const response = await axios.get(`https://city-explorer-api-drec.onrender.com/movies`, {
-        params: {
-          city_name: searchQuery,
-        },
-      });
+      const response = await axios.get(
+        `https://city-explorer-api-drec.onrender.com/movies`,
+        {
+          params: {
+            city_name: searchQuery,
+          },
+        }
+      );
       return response;
     } catch (error) {
       setRequestError(error);
     }
   };
   return (
+
     // display search box and button
     <Row className='w-100 justify-content-center'>
       <Form
-        onSubmit={getLocationData}
+        onSubmit={getPageData}
         className='d-flex justify-content-center'
       >
         <Row className='w-100'>
@@ -120,24 +141,7 @@ export default function LocationForm() {
       {/* display card if there is data to display */}
       {apiData ? (
         <Row className='mt-5 text-center'>
-          <Col >
-            <Card>
-              <Card.Title className='text-center'>
-                {apiData.displayName}
-              </Card.Title>
-              <img src={apiData.mapImg} alt='map' />
-              <Card.Body>
-                <ul className='list-group list-group-flush mt-3'>
-                  <li className='list-group-item'>
-                    Latitude: {apiData.latitude}
-                  </li>
-                  <li className='list-group-item'>
-                    Longitude: {apiData.longitude}
-                  </li>
-                </ul>
-              </Card.Body>
-            </Card>
-          </Col>
+          <LocationData apiData={apiData} />
           {apiData.forecasts ? (
             <Row>
               <Weather forecasts={apiData.forecasts} />
