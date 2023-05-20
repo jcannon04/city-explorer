@@ -31,9 +31,13 @@ export default function LocationForm() {
     e.preventDefault();
     try {
       let response = await getLocationData();
-      let weatherResponse = await getWeatherData(location, response.data[0].lon, response.data[0].lat);
+      let weatherResponse = await getWeatherData(
+        location,
+        response.data[0].lon,
+        response.data[0].lat
+      );
       let movieResponse = await getMovieData(location);
-  
+
       const responseData = {
         displayName: response.data[0].display_name,
         latitude: response.data[0].lat,
@@ -42,18 +46,16 @@ export default function LocationForm() {
         forecasts: weatherResponse ? weatherResponse.data : undefined,
         movies: movieResponse ? movieResponse.data : undefined,
       };
-  
+
       setApiData(responseData);
       setRequestError(null);
-      
     } catch (error) {
       setRequestError(error);
     }
   };
 
   // function to get location data from api
-  const getLocationData = async (e) => {
-    e.preventDefault();
+  const getLocationData = async () => {
     try {
       const response = await axios.get(
         `https://us1.locationiq.com/v1/search?key=${process.env.REACT_APP_LOCATION_API_KEY}`,
@@ -106,13 +108,9 @@ export default function LocationForm() {
     }
   };
   return (
-
     // display search box and button
     <Row className='w-100 justify-content-center'>
-      <Form
-        onSubmit={getPageData}
-        className='d-flex justify-content-center'
-      >
+      <Form onSubmit={getPageData} className='d-flex justify-content-center'>
         <Row className='w-100'>
           <Col className=''>
             <Form.Control
